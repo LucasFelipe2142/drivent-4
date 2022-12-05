@@ -2,6 +2,7 @@ import { notFoundError } from "@/errors";
 import bookingRepository from "@/repositories/booking-repository";
 import enrollmentRepository from "@/repositories/enrollment-repository";
 import ticketRepository from "@/repositories/ticket-repository";
+import { forbidden } from "joi";
 
 async function getBooking(userId: number) {
   const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
@@ -19,18 +20,22 @@ async function getBooking(userId: number) {
   if (!booking) {
     throw notFoundError();
   }
-  return booking;
+  const response = {
+    id: booking.id,
+    Room: booking.Room
+  };
+  return response;
 }
 
 async function postNewBooking(userId: number, roomId: number) {
   const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
   if (!enrollment) {
-    throw notFoundError();
+    throw forbidden();
   }
   const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
 
   if (!ticket || ticket.status === "RESERVED" || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
-    throw notFoundError();
+    throw forbidden();
   }
 
   const room = await bookingRepository.findRoomById(roomId);
@@ -40,27 +45,28 @@ async function postNewBooking(userId: number, roomId: number) {
   }
 
   if (room.Booking.length === room.capacity) {
-    throw notFoundError();
+    throw forbidden();
   }
 
   const newBooking = await bookingRepository.postBooking(userId, roomId);
+  console.log(newBooking);
   return newBooking;
 }
 
 async function updateBooking(oldBookingId: number, userId: number, roomId: number) {
   const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
   if (!enrollment) {
-    throw notFoundError();
+    throw forbidden();
   }
   const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
 
   if (!ticket || ticket.status === "RESERVED" || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
-    throw notFoundError();
+    throw forbidden();
   }
 
   const oldBooking = await bookingRepository.getBooking(userId);
   if (!oldBooking || oldBooking.id !== oldBookingId) {
-    throw notFoundError();
+    throw forbidden();
   }
 
   const newRoom = await bookingRepository.findRoomById(roomId);
@@ -69,7 +75,7 @@ async function updateBooking(oldBookingId: number, userId: number, roomId: numbe
   }
 
   if (newRoom.Booking.length >= newRoom.capacity) {
-    throw notFoundError();
+    throw forbidden();
   }
 
   await bookingRepository.deleteBooking(oldBookingId);
