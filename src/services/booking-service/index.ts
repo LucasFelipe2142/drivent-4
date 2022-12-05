@@ -49,7 +49,6 @@ async function postNewBooking(userId: number, roomId: number) {
   }
 
   const newBooking = await bookingRepository.postBooking(userId, roomId);
-  console.log(newBooking);
   return newBooking;
 }
 
