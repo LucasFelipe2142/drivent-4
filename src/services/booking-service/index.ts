@@ -80,6 +80,7 @@ async function updateBooking(oldBookingId: number, userId: number, roomId: numbe
 const bookingService = {
   getBooking,
   postNewBooking,
+  updateBooking
 };
 
 export default bookingService;
