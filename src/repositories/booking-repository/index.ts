@@ -2,7 +2,7 @@ import { prisma } from "@/config";
 import { Ticket, TicketStatus } from "@prisma/client";
 
 async function getBooking(userId: number) {
-  return prisma.booking.findMany({
+  return prisma.booking.findFirst({
     where: {
       userId,
     },
@@ -32,12 +32,21 @@ async function findRoomById(roomId: number ) {
   });
 }
 
+async function deleteBooking(bookingId: number) {
+  return prisma.booking.delete({
+    where: {
+      id: bookingId,
+    }
+  });
+}
+
 export type CreateTicketParams = Omit<Ticket, "id" | "createdAt" | "updatedAt">
 
 const bookingRepository = {
   getBooking,
   findRoomById,
-  postBooking
+  postBooking,
+  deleteBooking
 };
 
 export default bookingRepository;

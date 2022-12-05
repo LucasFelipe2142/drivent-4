@@ -2,7 +2,6 @@ import { notFoundError } from "@/errors";
 import bookingRepository from "@/repositories/booking-repository";
 import enrollmentRepository from "@/repositories/enrollment-repository";
 import ticketRepository from "@/repositories/ticket-repository";
-//import { TicketStatus } from "@prisma/client";
 
 async function getBooking(userId: number) {
   const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
@@ -44,6 +43,36 @@ async function postNewBooking(userId: number, roomId: number) {
     throw notFoundError();
   }
 
+  const newBooking = await bookingRepository.postBooking(userId, roomId);
+  return newBooking;
+}
+
+async function updateBooking(oldBookingId: number, userId: number, roomId: number) {
+  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
+  if (!enrollment) {
+    throw notFoundError();
+  }
+  const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
+
+  if (!ticket || ticket.status === "RESERVED" || ticket.TicketType.isRemote || !ticket.TicketType.includesHotel) {
+    throw notFoundError();
+  }
+
+  const oldBooking = await bookingRepository.getBooking(userId);
+  if (!oldBooking || oldBooking.id !== oldBookingId) {
+    throw notFoundError();
+  }
+
+  const newRoom = await bookingRepository.findRoomById(roomId);
+  if (!newRoom) {
+    throw notFoundError();
+  }
+
+  if (newRoom.Booking.length >= newRoom.capacity) {
+    throw notFoundError();
+  }
+
+  await bookingRepository.deleteBooking(oldBookingId);
   const newBooking = await bookingRepository.postBooking(userId, roomId);
   return newBooking;
 }
