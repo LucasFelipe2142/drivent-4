@@ -11,43 +11,23 @@ async function getBooking(userId: number) {
     }
   });
 }
-async function findTickeWithTypeById(ticketId: number) {
-  return prisma.ticket.findFirst({
+
+async function postBooking(userId: number, roomId: number) {
+  return prisma.booking.create({
+    data: {
+      userId,
+      roomId
+    }
+  });
+}
+
+async function findRoomById(roomId: number ) {
+  return prisma.room.findFirst({
     where: {
-      id: ticketId,
+      id: roomId,
     },
     include: {
-      TicketType: true,
-    }
-  });
-}
-
-async function findTicketByEnrollmentId(enrollmentId: number) {
-  return prisma.ticket.findFirst({
-    where: {
-      enrollmentId,
-    },
-    include: {
-      TicketType: true, //inner join
-    }
-  });
-}
-
-async function createTicket(ticket: CreateTicketParams) {
-  return prisma.ticket.create({
-    data: {
-      ...ticket,
-    }
-  });
-}
-
-async function ticketProcessPayment(ticketId: number) {
-  return prisma.ticket.update({
-    where: {
-      id: ticketId,
-    },
-    data: {
-      status: TicketStatus.PAID,
+      Booking: true
     }
   });
 }
@@ -56,6 +36,8 @@ export type CreateTicketParams = Omit<Ticket, "id" | "createdAt" | "updatedAt">
 
 const bookingRepository = {
   getBooking,
+  findRoomById,
+  postBooking
 };
 
 export default bookingRepository;
